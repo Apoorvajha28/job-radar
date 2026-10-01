@@ -1,0 +1,109 @@
+# ============================================================================
+# job-radar config — WHAT to look for. Secrets live in .env, never here.
+# Everything below is safe to commit / fork.
+# ============================================================================
+
+# Where the "already seen" SQLite db lives (relative to project root).
+db_path: data/seen-ml.db
+
+# ---- What counts as a match --------------------------------------------------
+keywords:
+  # A posting matches if its TITLE contains ANY of these (title_only: true).
+  include:
+    - machine learning
+    - ml engineer
+    - mle
+    - deep learning
+    - data scientist
+    - applied scientist
+    - ai engineer
+    - research engineer
+    - nlp
+    - computer vision
+  # ...and NONE of these (checked against title + snippet).
+  exclude:
+    - intern
+    - internship
+    - working student
+    - werkstudent
+    - principal
+    - director
+    - head of
+    - manager
+  title_only: true
+
+# Location substrings a posting must match (case-insensitive). Remote passes
+# automatically when remote_ok is true.
+locations:
+  - munich
+  - münchen
+  - germany
+  - deutschland
+  - berlin
+  - europe
+remote_ok: true
+
+# ---- Where to look -----------------------------------------------------------
+sources:
+
+  # 1) ATS public JSON feeds — the reliable backbone. Add/remove company
+  #    handles freely; a bad handle just logs a warning and is skipped.
+  #    Find a handle from a company's careers URL, e.g.
+  #      boards.greenhouse.io/<handle>, jobs.lever.co/<handle>,
+  #      jobs.ashbyhq.com/<handle>
+  ats:
+    greenhouse:
+      - anthropic
+      - stripe
+      - databricks
+      - figma
+      - discord
+      - gitlab
+      - robinhood
+      - scaleai
+    ashby:
+      - openai
+      - ramp
+      - cohere
+      - notion
+      - linear
+    lever:
+      - spotify
+      - palantir
+
+  # 2) Big Tech native adapter (only Amazon has a clean public API today).
+  bigtech:
+    amazon:
+      enabled: true
+      limit: 50
+      queries:
+        - machine learning
+        - applied scientist
+
+  # 3) Job boards via JobSpy (Indeed + Google Jobs reliable; LinkedIn fragile).
+  #    Google Jobs also catches Apple / Microsoft / Google / Meta career pages
+  #    via the bigtech_companies sweep below.
+  jobspy:
+    enabled: true
+    sites:
+      - indeed
+      - google
+      # - linkedin        # uncomment to add LinkedIn (rate-limits hard)
+    search_terms:
+      - machine learning engineer
+      - data scientist
+      - applied scientist
+    location: "Munich, Germany"
+    results_wanted: 40
+    hours_old: 72
+    country_indeed: germany
+    # Big Tech career-site coverage, routed through Google Jobs:
+    company_sweep:
+      roles:
+        - machine learning engineer
+      companies:
+        - Apple
+        - Microsoft
+        - Google
+        - Meta
+        - NVIDIA

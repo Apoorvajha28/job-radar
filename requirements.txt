@@ -1,0 +1,3 @@
+# Core (stdlib covers http/sqlite/json). Only two real deps:
+PyYAML>=6.0
+python-jobspy>=1.1.80

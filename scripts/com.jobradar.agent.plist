@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- launchd agent. __PROJECT_DIR__ is filled in by install_launchd.sh. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.jobradar.agent</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__PROJECT_DIR__/scripts/run.sh</string>
+    </array>
+
+    <!-- Run interval in seconds (filled by install_launchd.sh; default 3600 =
+         hourly). Also fires once at load, and on wake if a scheduled time was
+         missed while asleep. Job postings don't change by the minute, so
+         hourly is plenty and stays well under rate limits. -->
+    <key>StartInterval</key>
+    <integer>__INTERVAL__</integer>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>__PROJECT_DIR__/data/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>__PROJECT_DIR__/data/launchd.err.log</string>
+</dict>
+</plist>

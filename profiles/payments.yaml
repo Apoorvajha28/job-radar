@@ -1,0 +1,197 @@
+# ============================================================================
+# job-radar — ACTIVE profile. Currently: Payment Operations / Finance search.
+# Secrets live in .env, never here. Safe to commit / fork.
+#
+# Switch profiles without editing this file:
+#   ./.venv/bin/python run.py --config profiles/ml.yaml
+# Or copy a profile over this one to make it the launchd default:
+#   cp profiles/payments.yaml config.yaml
+# ============================================================================
+
+db_path: data/seen-payments.db
+
+# Keep alerts digestible:
+max_per_run: 40        # send at most N new jobs per run; rest trickle in later
+min_score: 0           # drop weak matches below this relevance score (0 = off)
+dedupe_cross_source: true
+
+# ---- What counts as a match --------------------------------------------------
+keywords:
+  # Title must contain ANY of these (title_only: true). Tweak freely.
+  include:
+    - payment
+    - payments
+    - payment operations
+    - payment analyst
+    - billing
+    - billing specialist
+    - reconciliation
+    - settlement
+    - chargeback
+    - dispute
+    - data analyst
+    - financial analyst
+    - finance analyst
+    - accounts payable
+    - accounts receivable
+    - treasury
+    - fraud
+    - aml
+    - kyc
+    - compliance analyst
+    # German equivalents (help Indeed-DE results pass the title filter):
+    - zahlung            # payment
+    - zahlungsverkehr    # payment transactions
+    - abrechnung         # billing/settlement
+    - buchhaltung        # accounting
+    - kreditoren         # accounts payable
+    - debitoren          # accounts receivable
+    - mahnwesen          # dunning/collections
+    - datenanalyst       # data analyst
+    - finanzanalyst      # financial analyst
+  # ...and NONE of these (checked against title + snippet).
+  exclude:
+    - intern
+    - internship
+    - working student
+    - werkstudent
+    - praktikum
+  # Title-only excludes — the main false-positive killer (drops e.g. "Payment
+  # Platform Engineer" without dropping a payment-ops role whose description
+  # merely mentions engineering teams).
+  exclude_title:
+    - engineer
+    - engineering
+    - developer
+    - software
+    - programmer
+    - devops
+    - sre
+    - architect
+    - data scientist
+    - machine learning
+    - frontend
+    - backend
+    - full stack
+    - fullstack
+    - sales
+    - account executive
+    - recruiter
+    - designer
+  title_only: true
+
+# Location substrings a posting must match. Remote passes when remote_ok.
+locations:
+  - munich
+  - münchen
+  - germany
+  - deutschland
+  - berlin
+  - europe
+remote_ok: true
+
+# ---- Where to look -----------------------------------------------------------
+sources:
+
+  # 1) ATS public JSON/XML feeds — the reliable backbone (resolved from your
+  #    company list). Add/remove handles freely; a bad one just logs + skips.
+  ats:
+    greenhouse:
+      - adyen         # Adyen
+      - n26           # N26
+      - stripe        # Stripe
+      - asana         # Asana
+      - flix          # FlixBus / FlixMobility
+      - freenow       # FreeNow
+      - wise          # Wise (bonus — payments)
+      - sumup         # SumUp (bonus — payments)
+      - gocardless    # GoCardless (bonus — payments)
+    ashby:
+      - pliant        # Pliant
+    lever:
+      - binance       # Binance
+    personio:         # subdomain only; tries .de then .com
+      - scalablecapital   # Scalable Capital
+      - finway            # finway
+      - westwing          # Westwing
+
+  # 2) Big Tech native adapter (Amazon is the only clean public one). Off for
+  #    this profile — flip enabled: true if you want Amazon payment roles too.
+  bigtech:
+    amazon:
+      enabled: false
+      limit: 50
+      queries:
+        - payment operations
+        - billing
+
+  # 3) Workday career sites (public JSON). Big corps run on Workday; each needs
+  #    its own endpoint (find it in the careers site's network calls:
+  #    <tenant>.wdN.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs). Results are
+  #    keyword+location filtered like any feed, so only relevant EU roles pass.
+  workday:
+    limit: 20            # per search term, per company
+    mastercard:
+      endpoint: https://mastercard.wd1.myworkdayjobs.com/wday/cxs/mastercard/CorporateCareers/jobs
+      searches: [payment, reconciliation, billing, settlement]
+    paypal:
+      endpoint: https://paypal.wd1.myworkdayjobs.com/wday/cxs/paypal/jobs/jobs
+      searches: [payment, reconciliation, billing, settlement]
+    # Note: Amex uses Oracle and KPMG-DE uses SeamlessHiring (not Workday) —
+    # they're covered via Arbeitsagentur + the Google/LinkedIn company_sweep.
+
+  # 4) Arbeitsagentur — Germany's largest job DB (free official API). Keyword
+  #    + radius search, so it catches roles at companies NOT on your list too.
+  arbeitsagentur:
+    enabled: true
+    location: München
+    radius_km: 30
+    size: 50
+    searches:
+      - payment
+      - zahlungsverkehr
+      - reconciliation
+      - billing
+      - abrechnung
+      - data analyst
+      - buchhaltung
+
+  # 5) Job boards via JobSpy (Indeed + Google Jobs + LinkedIn). The company_sweep
+  #    covers companies WITHOUT a clean ATS/Workday feed (PagoNxt, KPMG, Revolut,
+  #    Trade Republic, Klarna, Skrill/Paysafe, C24, epay, Google) via Google Jobs.
+  jobspy:
+    enabled: true
+    sites:
+      - indeed
+      - google
+      - linkedin          # enabled (rate-limits hard; may break occasionally)
+    search_terms:
+      - payment operations
+      - payments analyst
+      - billing specialist
+      - reconciliation
+      - data analyst
+    location: "Munich, Germany"
+    results_wanted: 40
+    hours_old: 72
+    country_indeed: germany
+    # NOTE: this runs (companies × roles) Google-Jobs queries per pass, so keep
+    # roles short (2-3) to stay well under rate limits. Add roles/companies as
+    # needed — a slow sweep is the usual reason to trim here.
+    company_sweep:
+      roles:
+        - payment operations
+        - reconciliation
+      companies:                # Mastercard + PayPal are on Workday above now
+        - PagoNxt
+        - KPMG
+        - Revolut
+        - Trade Republic
+        - Google
+        - Klarna
+        - Skrill
+        - Paysafe
+        - Visa
+        - American Express
+        - Check24
+        - epay

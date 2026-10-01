@@ -1,0 +1,115 @@
+# ============================================================================
+# job-radar — EXAMPLE config. Copy this to config.yaml and make it yours:
+#
+#     cp config.example.yaml config.yaml
+#
+# config.yaml is gitignored, so your personal search never leaves your machine
+# and `git pull` never clobbers it. Everything below is just an illustration —
+# a generic "backend engineer in Berlin" search. Edit it freely.
+# Secrets (Telegram token/chat id) live in .env, never in any YAML.
+# ============================================================================
+
+db_path: data/seen.db
+
+# ---- Keep alerts digestible --------------------------------------------------
+max_per_run: 40        # send at most N new jobs per run; rest trickle in later
+min_score: 0           # drop weak matches below this relevance score (0 = off)
+dedupe_cross_source: true
+
+# ---- What counts as a match --------------------------------------------------
+keywords:
+  # The TITLE must contain ANY of these (because title_only: true below).
+  include:
+    - backend engineer
+    - software engineer
+    - platform engineer
+    - python
+
+  # The title + description must contain NONE of these.
+  exclude:
+    - intern
+    - internship
+    - working student
+
+  # The TITLE must contain NONE of these. This is the main false-positive
+  # killer — e.g. for a *finance* search you'd put engineer/developer here so
+  # "Payment Platform Engineer" is dropped while real payment-ops roles stay.
+  # For this engineering example we instead exclude unrelated role families:
+  exclude_title:
+    - sales
+    - recruiter
+    - manager
+    - director
+
+  title_only: true     # match `include` against the title only (less noise)
+
+# ---- Where (a posting's location must contain one of these, or be remote) ----
+locations:
+  - berlin
+  - germany
+  - europe
+remote_ok: true
+
+# ---- Where to look -----------------------------------------------------------
+sources:
+
+  # 1) ATS public feeds — the reliable backbone. Find a company's ATS from its
+  #    careers URL and add the handle. A bad handle just logs a warning + skips.
+  ats:
+    greenhouse:          # boards.greenhouse.io/<handle>
+      - stripe
+      - gitlab
+    lever: []            # jobs.lever.co/<handle>
+    ashby: []            # jobs.ashbyhq.com/<handle>
+    personio: []         # <handle>.jobs.personio.de  (subdomain only; big in DE)
+
+  # 2) Workday career sites (public JSON). Find the endpoint in the careers
+  #    site's network calls: <tenant>.wdN.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs
+  workday:
+    limit: 20            # per search term, per company
+    # example:
+    #   mastercard:
+    #     endpoint: https://mastercard.wd1.myworkdayjobs.com/wday/cxs/mastercard/CorporateCareers/jobs
+    #     searches: [payment, reconciliation]
+
+  # 3) Arbeitsagentur — Germany's largest job DB (free official API). Keyword +
+  #    radius search, so it finds roles at companies NOT on your list too.
+  arbeitsagentur:
+    enabled: false
+    location: Berlin
+    radius_km: 30
+    size: 50
+    searches:
+      - software engineer
+      - backend
+
+  # 4) Big Tech native adapter (Amazon is the only clean public one).
+  bigtech:
+    amazon:
+      enabled: false
+      limit: 50
+      queries:
+        - software development engineer
+
+  # 5) Job boards via JobSpy (Indeed + Google Jobs + LinkedIn). General keyword
+  #    search; company_sweep adds targeted Google-Jobs queries for named
+  #    companies that lack a clean ATS/Workday feed.
+  jobspy:
+    enabled: true
+    sites:
+      - indeed
+      - google
+      - linkedin          # rate-limits hard; drop it if it starts failing
+    search_terms:
+      - backend engineer
+      - python developer
+    location: "Berlin, Germany"
+    results_wanted: 40
+    hours_old: 72
+    country_indeed: germany
+    company_sweep:         # keep roles short — it runs (roles × companies) queries
+      roles:
+        - backend engineer
+      companies:
+        - Zalando
+        - Delivery Hero

@@ -1,0 +1,14 @@
+# secrets & local state
+.env
+data/
+*.db
+
+# your personal active search (copy from config.example.yaml); stays local
+config.yaml
+
+# python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
