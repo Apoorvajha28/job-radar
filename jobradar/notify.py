@@ -61,6 +61,10 @@ class TelegramNotifier:
             text = f"{header}\n\n{body}" if i == 0 else body
             self._post(text)
 
+    def send_text(self, text: str) -> None:
+        """Send one plain status message (HTML allowed), e.g. a baseline note."""
+        self._post(text)
+
     def _post(self, text: str) -> None:
         data = urllib.parse.urlencode(
             {
@@ -90,6 +94,9 @@ class ConsoleNotifier:
         print(f"\n=== {len(jobs)} NEW MATCH(ES) ===")
         for j in jobs:
             print(f"- {j.title} | {j.company} | {j.location}\n  {j.url}  [{j.source}]")
+
+    def send_text(self, text: str) -> None:
+        print(text)
 
 
 def build_notifier(cfg: dict[str, Any], dry_run: bool):

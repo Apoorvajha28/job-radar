@@ -16,6 +16,20 @@ from ..models import Job
 log = logging.getLogger("jobradar.sources.boards")
 
 
+def _quiet_jobspy_logging() -> None:
+    """Silence JobSpy's own chatter.
+
+    JobSpy logs things like "Google returned no job data" at ERROR on its own
+    per-site loggers (JobSpy:Google, JobSpy:Indeed, ...), which have their own
+    handler and bypass our logging config. An empty source is harmless — we
+    already print a calm "jobspy '<term>' -> N postings" summary — so raise
+    those loggers above ERROR to stop the scary red lines.
+    """
+    for name in list(logging.root.manager.loggerDict):
+        if name.startswith("JobSpy"):
+            logging.getLogger(name).setLevel(logging.CRITICAL)
+
+
 def _val(v: Any) -> str:
     """Stringify a DataFrame cell, turning NaN/None into ''."""
     if v is None:
@@ -59,6 +73,8 @@ def fetch(cfg: dict) -> list[Job]:
     except Exception as exc:  # noqa: BLE001
         log.warning("jobspy not installed (%s); skipping board sources", exc)
         return []
+
+    _quiet_jobspy_logging()  # loggers exist only after the import above
 
     sites = js.get("sites", ["indeed", "google"])
     location = js.get("location", "")

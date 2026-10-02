@@ -58,10 +58,19 @@ def main() -> int:
     fresh = store.new_jobs(matched, cross_source=cross)
     log.info("%d are new", len(fresh))
 
-    # --seed: establish a baseline silently, then stop.
+    # --seed: establish a baseline, send ONE confirmation, then stop. We mark
+    # current matches as seen (so we don't flood with everything already open)
+    # but ping once so you know the pipe works instead of staring at silence.
     if args.seed:
         store.mark_seen(fresh)
+        tracked = store.count()
         store.close()
+        notifier = build_notifier(cfg, dry_run=args.dry_run)
+        notifier.send_text(
+            "✅ <b>job-radar is live.</b>\n"
+            f"Baseline set — now tracking {tracked} current postings. "
+            "I'll message you here as soon as a new matching job appears."
+        )
         print(f"Seeded {len(fresh)} current postings as 'seen'. "
               "Future runs will only alert on new ones.")
         return 0

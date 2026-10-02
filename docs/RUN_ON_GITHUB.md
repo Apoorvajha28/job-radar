@@ -34,8 +34,9 @@ which live in encrypted repo Secrets.
    Telegram. After that it runs hourly on its own.
 
 > **First-run flood is handled for you.** The workflow detects the very first
-> cloud run (no "seen" state yet) and silently seeds a baseline — it sends
-> nothing that run, then alerts only on postings that appear *after*. To start
+> cloud run (no "seen" state yet) and seeds a baseline — it sends a single
+> "✅ job-radar is live" confirmation (so you know it works), **not** a flood of
+> every open job, then alerts only on postings that appear *after*. To start
 > fresh later, go to **Actions → job-radar → Run workflow** and tick **seed**.
 
 ---
