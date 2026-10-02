@@ -27,11 +27,12 @@ feeds or [JobSpy](https://pypi.org/project/python-jobspy/), no paid APIs.
 4. [Telegram bot setup](#telegram-bot-setup)
 5. [First run & avoiding a flood](#first-run--avoiding-a-flood)
 6. [Run it automatically](#run-it-automatically-hourly)
-7. [Profiles (multiple searches)](#profiles-multiple-searches)
-8. [Configuration reference](#configuration-reference)
-9. [Adding more companies & sources](#adding-more-companies--sources)
-10. [Tuning & FAQ](#tuning--faq)
-11. [Project layout](#project-layout)
+7. [Windows](#windows)
+8. [Profiles (multiple searches)](#profiles-multiple-searches)
+9. [Configuration reference](#configuration-reference)
+10. [Adding more companies & sources](#adding-more-companies--sources)
+11. [Tuning & FAQ](#tuning--faq)
+12. [Project layout](#project-layout)
 
 ---
 
@@ -61,7 +62,8 @@ logs a warning, the run continues.
 
 ## Install
 
-Requires Python 3.10+ and macOS/Linux.
+Requires Python 3.10+ (macOS, Linux, or Windows — see the
+[Windows section](#windows) for PowerShell commands).
 
 ```bash
 cd job-radar
@@ -158,6 +160,55 @@ re-alerted.
 
 Full step-by-step — including **forking it to run on someone else's account**
 with their own alerts — is in [`docs/RUN_ON_GITHUB.md`](docs/RUN_ON_GITHUB.md).
+
+## Windows
+
+Everything works on Windows; only the macOS `launchd` auto-scheduler differs
+(use Task Scheduler instead, below). In **PowerShell**:
+
+```powershell
+# One-time: install Python + Git if you don't have them, then reopen PowerShell
+winget install -e --id Python.Python.3.12 ; winget install -e --id Git.Git
+
+git clone https://github.com/Shivamroy412/job-radar.git
+cd job-radar
+py -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+copy .env.example .env
+notepad .env          # fill in TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID, save
+```
+
+Seed a silent baseline once (sends nothing), then do real runs. Point `--config`
+at the search you want (omit it to use `config.yaml` → `config.example.yaml`):
+
+```powershell
+.venv\Scripts\python run.py --config profiles/payments.yaml --seed
+.venv\Scripts\python run.py --config profiles/payments.yaml
+```
+
+### Run it automatically on Windows (hourly — Task Scheduler)
+
+Run this **from inside the `job-radar` folder** in PowerShell. It schedules the
+included [`scripts\run.bat`](scripts/run.bat) (which self-locates, runs one pass,
+and appends to `data\jobradar.log`) every hour:
+
+```powershell
+$bat = Join-Path (Get-Location) "scripts\run.bat"
+schtasks /Create /SC HOURLY /TN "job-radar" /TR "`"$bat`" --config profiles/payments.yaml" /F
+```
+
+Manage it:
+
+```powershell
+schtasks /Run    /TN "job-radar"        # run once now
+schtasks /Delete /TN "job-radar" /F     # remove the schedule
+Get-Content data\jobradar.log -Wait     # watch the log (Ctrl+C to stop)
+```
+
+Unlike macOS `launchd`, Task Scheduler needs the PC awake *and* can be set to
+wake it or catch up on missed runs via *Task Scheduler (GUI) → job-radar →
+Properties → Conditions/Settings*. For true 24/7 with the machine off, use the
+[cloud route](#or-run-it-in-the-cloud-github-actions--247-no-machine-needed).
 
 ## Profiles (multiple searches)
 
@@ -290,7 +341,7 @@ jobradar/
     arbeitsagentur.py# Germany's federal job DB
     bigtech.py       # Amazon
     boards.py        # JobSpy: Indeed / Google / LinkedIn + company_sweep
-scripts/             # launchd agent + installer
+scripts/             # launchd agent + installer (macOS); run.sh / run.bat wrappers
 ```
 
 ## Notes & limits
