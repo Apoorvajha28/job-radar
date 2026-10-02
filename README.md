@@ -148,11 +148,16 @@ launchctl unload ~/Library/LaunchAgents/com.jobradar.agent.plist  # stop
 ### Or run it in the cloud (GitHub Actions) — 24/7, no machine needed
 
 A ready-made workflow lives at
-[`.github/workflows/schedule.yml`](.github/workflows/schedule.yml). Make the repo
-**public** (free private repos can't run scheduled Actions), add
+[`.github/workflows/schedule.yml`](.github/workflows/schedule.yml). In short:
+make the repo **public** (free private repos can't run scheduled Actions), add
 `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` under *Settings → Secrets and
-variables → Actions*, and it runs hourly on GitHub's runners. The "seen" state
-is cached between runs so you aren't re-alerted.
+variables → Actions*, optionally set a `CONFIG_PATH` variable to pick which
+committed search runs (e.g. `profiles/payments.yaml`), and it runs hourly on
+GitHub's runners. The "seen" state is cached between runs so you aren't
+re-alerted.
+
+Full step-by-step — including **forking it to run on someone else's account**
+with their own alerts — is in [`docs/RUN_ON_GITHUB.md`](docs/RUN_ON_GITHUB.md).
 
 ## Profiles (multiple searches)
 

@@ -1,16 +1,23 @@
 # Run job-radar on a schedule in the cloud — no always-on machine needed.
 #
-# Setup (one time):
+# Setup (one time) — see docs/RUN_ON_GITHUB.md for the full walkthrough:
 #   1. Make the repo PUBLIC (free private repos can't run scheduled Actions).
-#   2. Repo → Settings → Secrets and variables → Actions → add:
-#        TELEGRAM_BOT_TOKEN   TELEGRAM_CHAT_ID
-#   3. Commit your search as config.yaml OR rely on config.example.yaml.
-#      (config.yaml is gitignored by default — if you want the cloud run to use
-#       your personal search, either un-ignore it or copy it into the repo.)
+#   2. Repo → Settings → Secrets and variables → Actions:
+#        · Secrets tab → add  TELEGRAM_BOT_TOKEN  and  TELEGRAM_CHAT_ID
+#        · Variables tab → (optional) add  CONFIG_PATH  to pick which committed
+#          search file to run, e.g.  profiles/payments.yaml  or  profiles/ml.yaml
+#          Leave it unset and the run falls back to config.yaml → config.example.yaml.
+#   (config.yaml is gitignored, so the cloud run uses a COMMITTED file: either a
+#    profile you point CONFIG_PATH at, or config.example.yaml. Edit & commit that
+#    file to change your cloud search — no secrets ever go in it.)
 #
 # The "seen" SQLite DB is restored/saved via actions/cache so you aren't
 # re-alerted every run. Cache is best-effort (GitHub evicts after ~7 days of
 # disuse); a rare duplicate after a long idle gap is the worst case.
+#
+# NOTE: GitHub auto-disables scheduled workflows after 60 days with no repo
+# activity, and disables them on new forks until you enable Actions. Both are a
+# single click (Actions tab); editing your search file also resets the 60-day clock.
 
 name: job-radar
 
@@ -48,4 +55,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python run.py -v
+          CONFIG_PATH: ${{ vars.CONFIG_PATH }}
+        # If CONFIG_PATH is set (a repo Variable), run that committed search file;
+        # otherwise run.py falls back to config.yaml -> config.example.yaml.
+        run: python run.py ${CONFIG_PATH:+--config "$CONFIG_PATH"} -v
