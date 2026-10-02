@@ -27,21 +27,25 @@ def _format(job: Job) -> str:
     )
 
 
-def _chunks(jobs: list[Job]) -> list[str]:
-    """Pack job cards into messages under the Telegram size limit."""
-    messages: list[str] = []
-    buf: list[str] = []
+def _batches(jobs: list[Job]) -> list[list[Job]]:
+    """Group jobs into batches that each fit one Telegram message.
+
+    Returns the jobs per batch (not the rendered text) so the caller can tell
+    exactly which jobs made it into a message that actually sent.
+    """
+    batches: list[list[Job]] = []
+    buf: list[Job] = []
     length = 0
     for job in jobs:
         card = _format(job)
         if length + len(card) + 2 > MAX_LEN and buf:
-            messages.append("\n\n".join(buf))
+            batches.append(buf)
             buf, length = [], 0
-        buf.append(card)
+        buf.append(job)
         length += len(card) + 2
     if buf:
-        messages.append("\n\n".join(buf))
-    return messages
+        batches.append(buf)
+    return batches
 
 
 class TelegramNotifier:
@@ -53,19 +57,30 @@ class TelegramNotifier:
     def configured(self) -> bool:
         return bool(self.token and self.chat_id)
 
-    def send(self, jobs: list[Job]) -> None:
+    def send(self, jobs: list[Job]) -> list[Job]:
+        """Send jobs; return ONLY the ones actually delivered.
+
+        If a message fails (e.g. a bad token -> HTTP 401), we stop and report
+        what got through. The caller marks just those as seen, so undelivered
+        jobs stay "new" and are retried next run instead of being silently lost.
+        """
         if not jobs:
-            return
+            return []
         header = f"🛰️ <b>{len(jobs)} new job match(es)</b>"
-        for i, body in enumerate(_chunks(jobs)):
+        delivered: list[Job] = []
+        for i, batch in enumerate(_batches(jobs)):
+            body = "\n\n".join(_format(j) for j in batch)
             text = f"{header}\n\n{body}" if i == 0 else body
-            self._post(text)
+            if not self._post(text):
+                break  # bad token/outage — don't mark the rest as sent
+            delivered.extend(batch)
+        return delivered
 
-    def send_text(self, text: str) -> None:
+    def send_text(self, text: str) -> bool:
         """Send one plain status message (HTML allowed), e.g. a baseline note."""
-        self._post(text)
+        return self._post(text)
 
-    def _post(self, text: str) -> None:
+    def _post(self, text: str) -> bool:
         data = urllib.parse.urlencode(
             {
                 "chat_id": self.chat_id,
@@ -78,8 +93,10 @@ class TelegramNotifier:
         try:
             with urllib.request.urlopen(req, timeout=20) as resp:
                 resp.read()
+            return True
         except Exception as exc:  # noqa: BLE001 - don't let alerts crash the run
             log.error("Telegram send failed: %s", exc)
+            return False
 
 
 class ConsoleNotifier:
@@ -87,16 +104,18 @@ class ConsoleNotifier:
 
     configured = True
 
-    def send(self, jobs: list[Job]) -> None:
+    def send(self, jobs: list[Job]) -> list[Job]:
         if not jobs:
             print("(no new matches)")
-            return
+            return []
         print(f"\n=== {len(jobs)} NEW MATCH(ES) ===")
         for j in jobs:
             print(f"- {j.title} | {j.company} | {j.location}\n  {j.url}  [{j.source}]")
+        return jobs
 
-    def send_text(self, text: str) -> None:
+    def send_text(self, text: str) -> bool:
         print(text)
+        return True
 
 
 def build_notifier(cfg: dict[str, Any], dry_run: bool):

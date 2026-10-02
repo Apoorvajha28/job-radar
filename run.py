@@ -80,12 +80,19 @@ def main() -> int:
     cap = int(cfg.get("max_per_run", 0))
     to_send = fresh[:cap] if cap else fresh
 
-    # 5) notify + remember (only what we actually sent)
+    # 5) notify + remember — mark seen ONLY what actually got delivered, so a
+    #    failed send (e.g. a bad Telegram token -> 401) leaves jobs "new" to
+    #    retry next run instead of silently burning them.
     notifier = build_notifier(cfg, dry_run=args.dry_run)
-    notifier.send(to_send)
+    sent = notifier.send(to_send)
 
     if not args.dry_run:
-        store.mark_seen(to_send)
+        store.mark_seen(sent)
+        if len(sent) < len(to_send):
+            log.warning(
+                "delivered only %d of %d; the rest stay unseen and retry next run "
+                "(check the Telegram error above)", len(sent), len(to_send),
+            )
         log.info("state now tracks %d postings", store.count())
 
     store.close()

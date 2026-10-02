@@ -73,8 +73,19 @@ jobs:
           mkdir -p data
           CFG=""
           [ -n "$CONFIG_PATH" ] && CFG="--config $CONFIG_PATH"
-          if [ "$SEED_INPUT" = "true" ] || [ -z "$(ls -A data/*.db 2>/dev/null)" ]; then
-            echo "No prior state (or seed requested) -> seeding a silent baseline; no alerts this run."
+          if [ "$SEED_INPUT" = "true" ]; then
+            echo "Seed requested -> silent baseline; no alerts this run."
+            python run.py $CFG --seed -v
+          elif [ "$SEED_INPUT" = "false" ]; then
+            # Manual "Run workflow" with seed unchecked: a real run even from an
+            # empty state, so you can force-deliver a backlog (e.g. to recover
+            # after a bad-token run swallowed jobs).
+            echo "Manual run (seed unchecked) -> normal pass; will deliver unseen matches."
+            python run.py $CFG -v
+          elif [ -z "$(ls -A data/*.db 2>/dev/null)" ]; then
+            # Scheduled run with no prior state = genuine first run -> seed so we
+            # don't flood with everything currently open.
+            echo "No prior state on a scheduled run -> seeding a silent baseline."
             python run.py $CFG --seed -v
           else
             python run.py $CFG -v
