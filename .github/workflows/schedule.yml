@@ -24,7 +24,12 @@ name: job-radar
 on:
   schedule:
     - cron: "0 * * * *"      # hourly (UTC). Change to taste, e.g. "*/30 * * * *"
-  workflow_dispatch: {}        # also allow manual runs from the Actions tab
+  workflow_dispatch:           # also allow manual runs from the Actions tab
+    inputs:
+      seed:
+        description: "Seed a silent baseline (mark current postings as seen, send nothing)"
+        type: boolean
+        default: false
 
 concurrency:
   group: job-radar
@@ -56,6 +61,21 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           CONFIG_PATH: ${{ vars.CONFIG_PATH }}
-        # If CONFIG_PATH is set (a repo Variable), run that committed search file;
-        # otherwise run.py falls back to config.yaml -> config.example.yaml.
-        run: python run.py ${CONFIG_PATH:+--config "$CONFIG_PATH"} -v
+          SEED_INPUT: ${{ github.event.inputs.seed }}
+        # CONFIG_PATH (a repo Variable) picks which committed search to run;
+        # unset -> run.py falls back to config.yaml -> config.example.yaml.
+        #
+        # Seed-on-first-run: if no "seen" DB was restored from cache (the very
+        # first cloud run), establish a silent baseline instead of alerting on
+        # every currently-open posting. You can also force a reseed anytime via
+        # Actions -> Run workflow -> tick "seed". Normal runs after that.
+        run: |
+          mkdir -p data
+          CFG=""
+          [ -n "$CONFIG_PATH" ] && CFG="--config $CONFIG_PATH"
+          if [ "$SEED_INPUT" = "true" ] || [ -z "$(ls -A data/*.db 2>/dev/null)" ]; then
+            echo "No prior state (or seed requested) -> seeding a silent baseline; no alerts this run."
+            python run.py $CFG --seed -v
+          else
+            python run.py $CFG -v
+          fi

@@ -33,10 +33,10 @@ which live in encrypted repo Secrets.
    click **job-radar** → **Run workflow** to fire one now. Check the log and your
    Telegram. After that it runs hourly on its own.
 
-> **Tip — avoid a first-run flood.** The very first real run treats everything as
-> new. If that's too noisy, temporarily change the run step to `python run.py
-> ${CONFIG_PATH:+--config "$CONFIG_PATH"} --seed -v` (marks current postings as
-> seen, sends nothing), run it once, then revert.
+> **First-run flood is handled for you.** The workflow detects the very first
+> cloud run (no "seen" state yet) and silently seeds a baseline — it sends
+> nothing that run, then alerts only on postings that appear *after*. To start
+> fresh later, go to **Actions → job-radar → Run workflow** and tick **seed**.
 
 ---
 
