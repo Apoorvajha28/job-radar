@@ -116,3 +116,33 @@ sources:
         - Google
         - Meta
         - NVIDIA
+
+  # 4) Arbeitsagentur — Germany's largest job DB (free official API, no key).
+  #    Works from the cloud too (unlike the scraped boards), so it's the
+  #    reliable fallback for Munich/DE roles when JobSpy is blocked.
+  arbeitsagentur:
+    enabled: true
+    location: München
+    radius_km: 30
+    size: 50
+    searches:
+      - machine learning
+      - data scientist
+      - ki                     # German: AI
+      - künstliche intelligenz
+
+  # 5) Adzuna — official aggregator API (free tier). Reaches Indeed-style
+  #    breadth WITHOUT scraping, so it works from datacenter IPs / the cloud.
+  #    Get free keys at https://developer.adzuna.com/ and put them in .env as
+  #    ADZUNA_APP_ID / ADZUNA_APP_KEY (never in this file).
+  adzuna:
+    enabled: true
+    countries: [de, at]        # Adzuna has no Luxembourg; Arbeitsagentur covers DE
+    location: Munich
+    distance_km: 30
+    results_per_page: 50       # API max
+    max_days_old: 7
+    searches:
+      - machine learning engineer
+      - data scientist
+      - applied scientist

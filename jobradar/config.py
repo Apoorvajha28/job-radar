@@ -39,4 +39,11 @@ def load_config(config_path: str | None = None) -> dict[str, Any]:
     cfg.setdefault("telegram", {})
     cfg["telegram"]["bot_token"] = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     cfg["telegram"]["chat_id"] = os.environ.get("TELEGRAM_CHAT_ID", "")
+
+    # Adzuna API keys also come from env (free tier). Only injected when the
+    # profile actually declares an adzuna source, so keys stay out of YAML.
+    adz = (cfg.get("sources", {}) or {}).get("adzuna")
+    if isinstance(adz, dict):
+        adz["app_id"] = os.environ.get("ADZUNA_APP_ID", "")
+        adz["app_key"] = os.environ.get("ADZUNA_APP_KEY", "")
     return cfg

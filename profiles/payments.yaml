@@ -214,3 +214,22 @@ sources:
         - American Express
         - Check24
         - epay
+
+  # 6) Adzuna — official aggregator API (free tier). Reaches Indeed-style
+  #    breadth WITHOUT scraping, so it works from datacenter IPs / the cloud
+  #    (the scraped boards above do not). Get free keys at
+  #    https://developer.adzuna.com/ and put them in .env as ADZUNA_APP_ID /
+  #    ADZUNA_APP_KEY (never in this file).
+  adzuna:
+    enabled: true
+    countries: [de, at]        # Adzuna has no Luxembourg; Arbeitsagentur covers DE
+    location: Munich
+    distance_km: 30
+    results_per_page: 50       # API max
+    max_days_old: 7
+    searches:
+      - payment operations
+      - payments analyst
+      - billing specialist
+      - reconciliation
+      - data analyst
