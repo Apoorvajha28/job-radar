@@ -170,8 +170,14 @@ sources:
       - payment
       - zahlungsverkehr
       - reconciliation
+      - settlement
       - billing
       - abrechnung
+      - accounts payable
+      - accounts receivable
+      - kreditoren          # accounts payable (DE)
+      - debitoren           # accounts receivable (DE)
+      - treasury
       - data analyst
       - buchhaltung
 
@@ -214,3 +220,28 @@ sources:
         - American Express
         - Check24
         - epay
+
+  # 6) Adzuna — official aggregator API (free tier). Reaches Indeed-style
+  #    breadth WITHOUT scraping, so it works from datacenter IPs / the cloud
+  #    (the scraped boards above do not). Get free keys at
+  #    https://developer.adzuna.com/ and put them in .env as ADZUNA_APP_ID /
+  #    ADZUNA_APP_KEY (never in this file).
+  adzuna:
+    enabled: true
+    # de-only to stay under the free tier: ~8 searches × 1 country ≈ 8 calls/run
+    # (hourly ≈ 190/day, under the ~250/day cap). Add `at` back only if you also
+    # trim searches or raise the launchd interval. Arbeitsagentur covers DE depth.
+    countries: [de]
+    location: Munich
+    distance_km: 30
+    results_per_page: 50       # API max
+    max_days_old: 7
+    searches:
+      - payment operations
+      - payments analyst
+      - billing specialist
+      - reconciliation
+      - settlement
+      - accounts payable
+      - accounts receivable
+      - treasury

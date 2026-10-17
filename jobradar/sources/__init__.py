@@ -4,12 +4,12 @@ from __future__ import annotations
 import logging
 
 from ..models import Job
-from . import arbeitsagentur, ats, bigtech, boards, workday
+from . import adzuna, arbeitsagentur, ats, bigtech, boards, workday
 
 log = logging.getLogger("jobradar.sources")
 
 # order is cosmetic; all run every pass
-_MODULES = [ats, bigtech, boards, workday, arbeitsagentur]
+_MODULES = [ats, bigtech, boards, workday, arbeitsagentur, adzuna]
 
 
 def collect_all(cfg: dict) -> list[Job]:
