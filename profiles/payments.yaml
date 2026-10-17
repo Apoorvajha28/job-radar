@@ -221,17 +221,16 @@ sources:
         - Check24
         - epay
 
-  # 6) Adzuna — official aggregator API (free tier). Reaches Indeed-style
-  #    breadth WITHOUT scraping, so it works from datacenter IPs / the cloud
-  #    (the scraped boards above do not). Get free keys at
-  #    https://developer.adzuna.com/ and put them in .env as ADZUNA_APP_ID /
-  #    ADZUNA_APP_KEY (never in this file).
+  # 6) Adzuna — official aggregator API. NOT free for real use: the signup plan
+  #    is a one-time 25-call trial; sustained access is £8/month (500 calls/day).
+  #    Disabled to keep this repo zero-cost. It only matters for a CLOUD deploy
+  #    (datacenter IPs that can't scrape Indeed/Google/LinkedIn); at home JobSpy
+  #    covers that breadth free, and Arbeitsagentur is the free cloud fallback.
+  #    To use it anyway: register at https://developer.adzuna.com/, subscribe,
+  #    put ADZUNA_APP_ID / ADZUNA_APP_KEY in .env, and set enabled: true.
   adzuna:
-    enabled: true
-    # de-only to stay under the free tier: ~8 searches × 1 country ≈ 8 calls/run
-    # (hourly ≈ 190/day, under the ~250/day cap). Add `at` back only if you also
-    # trim searches or raise the launchd interval. Arbeitsagentur covers DE depth.
-    countries: [de]
+    enabled: false
+    countries: [de]            # keep narrow; each search × country is one call
     location: Munich
     distance_km: 30
     results_per_page: 50       # API max

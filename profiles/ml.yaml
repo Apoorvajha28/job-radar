@@ -131,13 +131,15 @@ sources:
       - ki                     # German: AI
       - künstliche intelligenz
 
-  # 5) Adzuna — official aggregator API (free tier). Reaches Indeed-style
-  #    breadth WITHOUT scraping, so it works from datacenter IPs / the cloud.
-  #    Get free keys at https://developer.adzuna.com/ and put them in .env as
-  #    ADZUNA_APP_ID / ADZUNA_APP_KEY (never in this file).
+  # 5) Adzuna — official aggregator API. NOT free for real use: the signup plan
+  #    is a one-time 25-call trial; sustained access is £8/month (500 calls/day).
+  #    Disabled to keep this repo zero-cost. Only matters for a CLOUD deploy; at
+  #    home JobSpy covers this breadth free and Arbeitsagentur is the free cloud
+  #    fallback. To use it: register at https://developer.adzuna.com/, subscribe,
+  #    put ADZUNA_APP_ID / ADZUNA_APP_KEY in .env, and set enabled: true.
   adzuna:
-    enabled: true
-    countries: [de, at]        # Adzuna has no Luxembourg; Arbeitsagentur covers DE
+    enabled: false
+    countries: [de]            # keep narrow; each search × country is one call
     location: Munich
     distance_km: 30
     results_per_page: 50       # API max
