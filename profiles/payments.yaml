@@ -87,8 +87,9 @@ keywords:
   title_only: true
 
 # ---- Where she'll work --------------------------------------------------------
-# Policy: Munich jobs always; anywhere else in Germany/EU only if the role is
-# remote or hybrid; onsite-elsewhere and non-EU are dropped.
+# Policy: Munich jobs always; anywhere else in Germany, Austria or Luxembourg
+# only if the role is remote or hybrid; onsite-elsewhere and other countries
+# are dropped.
 #
 # home_locations = kept regardless of work mode (home base). Setting this turns
 # on the tiered policy above. Jobs outside home are kept when remote/hybrid or
@@ -98,13 +99,12 @@ home_locations:
   - munich
   - münchen
 remote_ok: true     # also keep plain "Remote" postings (no place named)
-# How "Germany/EU" is recognised: a built-in allow-list of EU/EEA countries +
-# major cities (see jobradar/filters.py DEFAULT_REGION_LOCATIONS). A non-Munich
-# job is kept when its location matches that list (or is bare "remote") and it
-# isn't a known onsite role. Add a German town the list is missing, or extend
-# the region, via `region_locations` (this REPLACES the built-in list, so
-# include the built-ins you still want). To force-drop somewhere inside the
-# region (a city you'd never commute to, or the UK), list it in `drop_locations`.
+# The allowed countries are Germany, Austria and Luxembourg — a built-in
+# allow-list of their names + major cities (see jobradar/filters.py
+# DEFAULT_REGION_LOCATIONS). A non-Munich job is kept when its location matches
+# that list (or is bare "remote") and it isn't a known onsite role. Widen it
+# (e.g. add more EU countries/cities) or narrow it via `region_locations` (this
+# REPLACES the built-in list). To force-drop a place, list it in drop_locations.
 # region_locations:
 #   - ...        # only if you need to override the built-in allow-list
 # drop_locations:
@@ -171,8 +171,14 @@ sources:
       - payment
       - zahlungsverkehr
       - reconciliation
+      - settlement
       - billing
       - abrechnung
+      - accounts payable
+      - accounts receivable
+      - kreditoren          # accounts payable (DE)
+      - debitoren           # accounts receivable (DE)
+      - treasury
       - data analyst
       - buchhaltung
 
@@ -215,3 +221,27 @@ sources:
         - American Express
         - Check24
         - epay
+
+  # 6) Adzuna — official aggregator API. NOT free for real use: the signup plan
+  #    is a one-time 25-call trial; sustained access is £8/month (500 calls/day).
+  #    Disabled to keep this repo zero-cost. It only matters for a CLOUD deploy
+  #    (datacenter IPs that can't scrape Indeed/Google/LinkedIn); at home JobSpy
+  #    covers that breadth free, and Arbeitsagentur is the free cloud fallback.
+  #    To use it anyway: register at https://developer.adzuna.com/, subscribe,
+  #    put ADZUNA_APP_ID / ADZUNA_APP_KEY in .env, and set enabled: true.
+  adzuna:
+    enabled: false
+    countries: [de]            # keep narrow; each search × country is one call
+    location: Munich
+    distance_km: 30
+    results_per_page: 50       # API max
+    max_days_old: 7
+    searches:
+      - payment operations
+      - payments analyst
+      - billing specialist
+      - reconciliation
+      - settlement
+      - accounts payable
+      - accounts receivable
+      - treasury

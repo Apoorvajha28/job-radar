@@ -11,11 +11,21 @@ A living audit of where job postings come from. "Free" means no paid API/proxy.
 | **Ashby** | ATS | Official public JSON per company | High |
 | **Personio** | ATS | Official public XML per company (big in DE) | High |
 | **Workday** | ATS | Public cxs JSON per company (Mastercard, PayPal) | High |
-| **Arbeitsagentur** | Board | Free official REST API (Germany's largest DB) | High |
-| **Indeed** | Board | JobSpy (keyword + location search) | Medium |
-| **Google Jobs** | Aggregator | JobSpy — also powers the `company_sweep` | Medium |
-| **LinkedIn** | Board | JobSpy (enabled; rate-limits, may break) | Low–Med |
+| **Arbeitsagentur** | Board | Free official REST API (Germany's largest DB) | High (cloud too) |
+| **Adzuna** | Aggregator | Official API (key) — Indeed-style breadth, no scraping. **Paid: £8/mo** (free = 25-call trial). Disabled by default | High (cloud too) |
+| **Indeed** | Board | JobSpy (keyword + location search) | Home only¹ |
+| **Google Jobs** | Aggregator | JobSpy — also powers the `company_sweep` | Home only¹ |
+| **LinkedIn** | Board | JobSpy (enabled; rate-limits, may break) | Home only¹ (flaky) |
 | **Amazon** | Company | Native public search API (off by default) | High |
+
+¹ **Home vs cloud:** the JobSpy sources *scrape* Indeed/Google/LinkedIn, which
+block datacenter IPs. They return full results from a home/residential IP
+(launchd on your Mac) but little or nothing from GitHub Actions or any cloud
+host. Everything else is an official API/feed and works from anywhere — so on a
+cloud run, **Arbeitsagentur** (free, keyless) is what carries the general-search
+breadth that Indeed/Google would otherwise provide. **Adzuna** can add more
+breadth there too, but it's **paid** (£8/mo) and is disabled by default to keep
+the project zero-cost.
 
 **How the company list is used:** ATS/Workday feeds pull *all* roles from the
 companies you list. Indeed, Google Jobs, LinkedIn and Arbeitsagentur are
