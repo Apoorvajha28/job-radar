@@ -170,8 +170,14 @@ sources:
       - payment
       - zahlungsverkehr
       - reconciliation
+      - settlement
       - billing
       - abrechnung
+      - accounts payable
+      - accounts receivable
+      - kreditoren          # accounts payable (DE)
+      - debitoren           # accounts receivable (DE)
+      - treasury
       - data analyst
       - buchhaltung
 
@@ -222,7 +228,10 @@ sources:
   #    ADZUNA_APP_KEY (never in this file).
   adzuna:
     enabled: true
-    countries: [de, at]        # Adzuna has no Luxembourg; Arbeitsagentur covers DE
+    # de-only to stay under the free tier: ~8 searches × 1 country ≈ 8 calls/run
+    # (hourly ≈ 190/day, under the ~250/day cap). Add `at` back only if you also
+    # trim searches or raise the launchd interval. Arbeitsagentur covers DE depth.
+    countries: [de]
     location: Munich
     distance_km: 30
     results_per_page: 50       # API max
@@ -232,4 +241,7 @@ sources:
       - payments analyst
       - billing specialist
       - reconciliation
-      - data analyst
+      - settlement
+      - accounts payable
+      - accounts receivable
+      - treasury
